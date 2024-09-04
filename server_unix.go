@@ -8,7 +8,7 @@ import (
 )
 
 func (s *Server) toLocalPath(p string) string {
-	if s.workDir != "" && !path.IsAbs(p) {
+	if s.workDir != "" {
 		p = path.Join(s.workDir, p)
 	}
 

@@ -21,6 +21,11 @@ const (
 	SftpServerWorkerCount = 8
 )
 
+type Progress struct {
+	Filename string
+	Written  int
+}
+
 // Server is an SSH File Transfer Protocol (sftp) server.
 // This is intended to provide the sftp subsystem to an ssh server daemon.
 // This implementation currently supports most of sftp server protocol version 3,
@@ -35,6 +40,7 @@ type Server struct {
 	handleCount   int
 	workDir       string
 	maxTxPacket   uint32
+	progressChan  chan<- Progress
 }
 
 func (svr *Server) nextHandle(f *os.File) string {
@@ -106,6 +112,13 @@ type ServerOption func(*Server) error
 func WithDebug(w io.Writer) ServerOption {
 	return func(s *Server) error {
 		s.debugStream = w
+		return nil
+	}
+}
+
+func WithProgress(progress chan<- Progress) ServerOption {
+	return func(s *Server) error {
+		s.progressChan = progress
 		return nil
 	}
 }
@@ -327,7 +340,11 @@ func handlePacket(s *Server, p orderedRequest) error {
 		f, ok := s.getHandle(p.Handle)
 		var err error = EBADF
 		if ok {
-			_, err = f.WriteAt(p.Data, int64(p.Offset))
+			var n int
+			n, err = f.WriteAt(p.Data, int64(p.Offset))
+			if s.progressChan != nil {
+				s.progressChan <- Progress{f.Name(), n}
+			}
 		}
 		rpkt = statusFromError(p.ID, err)
 	case *sshFxpExtendedPacket:
