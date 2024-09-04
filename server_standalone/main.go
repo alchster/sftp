@@ -10,7 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com//alchster/sftp"
+	"github.com/pkg/sftp"
 )
 
 func main() {

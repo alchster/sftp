@@ -15,7 +15,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 
-	"github.com//alchster/sftp"
+	"github.com/pkg/sftp"
 )
 
 var (
